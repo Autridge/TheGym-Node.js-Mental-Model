@@ -2,6 +2,7 @@ import express from "express";
 import type { Request, Response } from "express";
 
 const app = express();
+app.use(express.json());
 
 interface Todo {
   id: number;
@@ -15,7 +16,7 @@ let id: number = 0;
 app.post("/todos", (req: Request, res: Response): void => {
   const { title, completed = false } = req.body;
 
-  if (!title || title !== "string" || title.trim() === "") {
+  if (!title || typeof title !== "string" || title.trim() === "") {
     res
       .status(404)
       .json({ success: false, error: "Todo must include a title" });
@@ -29,22 +30,27 @@ app.post("/todos", (req: Request, res: Response): void => {
   };
 
   todos.push(todo);
+
+  res.status(200).json({
+    success: true,
+    todo,
+  });
 });
 
 app.get("/todos", (req: Request, res: Response): void => {
-  res.status(400).json({
+  res.status(200).json({
     success: true,
     todos,
     message: `${todos.length} todos`,
   });
 });
 
-app.patch("/todos:id", (req: Request, res: Response): void => {
+app.patch("/todos/:id", (req: Request, res: Response): void => {
   const id: number = parseInt(req.params.id, 10);
   const todo = todos.find((t: Todo) => t.id === id);
 
   if (!todo) {
-    res.status(400).json({
+    res.status(404).json({
       success: false,
       error: "Todo not found",
     });
@@ -59,12 +65,12 @@ app.patch("/todos:id", (req: Request, res: Response): void => {
   });
 });
 
-app.delete("/todos:id", (req: Request, res: Response): void => {
+app.delete("/todos/:id", (req: Request, res: Response): void => {
   const id: number = parseInt(req.params.id, 10);
   const todoIndex = todos.findIndex((t: Todo) => t.id === id);
 
   if (todoIndex === -1) {
-    res.status(400).json({
+    res.status(404).json({
       success: false,
       error: "Todo not found",
     });
@@ -82,5 +88,5 @@ app.delete("/todos:id", (req: Request, res: Response): void => {
 
 const PORT: number = 3000;
 app.listen(3000, () => {
-  console.log(`Server is listening on http:localhost:${PORT}`);
+  console.log(`Todo API is running on http:localhost:${PORT}`);
 });
